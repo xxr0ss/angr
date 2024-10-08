@@ -1104,6 +1104,19 @@ class TestStringSimProcedures(unittest.TestCase):
         s.memory.store(str_addr, str_)
         assert s.solver.eval(s.mem[str_addr].string.resolved, cast_to=bytes) == b"abcd"
 
+    def test_format_string(self):
+        s = SimState(arch="AMD64", mode="symbolic")
+        dst_addr = claripy.BVV(0x1000, 32)
+        format_addr = claripy.BVV(0x2000, 64)
+
+        s.memory.store(format_addr, b"%04x\x00")
+        sprintf(s, [dst_addr, format_addr, claripy.BVV(0x9AB, 32)])
+        assert s.solver.eval(s.memory.load(dst_addr, 5), cast_to=bytes) == b"09ab\x00"
+
+        s.memory.store(format_addr, b"%04X\x00")
+        sprintf(s, [dst_addr, format_addr, claripy.BVV(0x9AB, 32)])
+        assert s.solver.eval(s.memory.load(dst_addr, 5), cast_to=bytes) == b"09AB\x00"
+
 
 if __name__ == "__main__":
     unittest.main()

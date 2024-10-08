@@ -100,6 +100,8 @@ class FormatString:
                         s_val = chr(c_val & 0xFF)
                     elif fmt_spec.spec_type == b"x":
                         s_val = hex(c_val)[2:]
+                    elif fmt_spec.spec_type == b"X":
+                        s_val = hex(c_val)[2:].upper()
                     elif fmt_spec.spec_type == b"o":
                         s_val = oct(c_val)[2:]
                     elif fmt_spec.spec_type == b"p":
@@ -150,7 +152,7 @@ class FormatString:
                     num_args += 1
                 else:
                     bits = component.size * 8
-                    if component.spec_type == b"x":
+                    if component.spec_type in b"xX":
                         base = 16
                     elif component.spec_type == b"o":
                         base = 8
@@ -278,8 +280,8 @@ class FormatString:
 
                 else:
                     # XXX: atoi only supports strings of one byte
-                    if fmt_spec.spec_type in [b"d", b"i", b"u", b"x"]:
-                        base = 16 if fmt_spec.spec_type == b"x" else 10
+                    if fmt_spec.spec_type in [b"d", b"i", b"u", b"x", b"X"]:
+                        base = 16 if fmt_spec.spec_type in b"xX" else 10
                         status, i, num_bytes = self.parser._sim_atoi_inner(
                             position, region, base=base, read_length=fmt_spec.length_spec
                         )
@@ -339,7 +341,10 @@ class FormatSpecifier:
 
     @property
     def spec_type(self):
-        return self.string[-1:].lower()
+        t = self.string[-1:]
+        if t == b"X":
+            return t
+        return t.lower()
 
     def __str__(self):
         return f"%{self.string.decode()}"

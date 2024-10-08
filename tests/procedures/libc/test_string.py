@@ -781,7 +781,6 @@ class TestStringSimProcedures(unittest.TestCase):
         #     assert s.solver.solution(s.memory.load(dst_addr, 4, endness="Iend_BE"), 0x00414100)
         #     assert not s.solver.solution(s.memory.load(dst_addr, 4, endness="Iend_BE"), 0x00010203)
 
-    @broken
     def test_sprintf(self):
         log.info("concrete src, concrete dst, concrete len")
         s = SimState(mode="symbolic", arch="PPC32")
@@ -793,18 +792,18 @@ class TestStringSimProcedures(unittest.TestCase):
 
         s.memory.store(format_addr, format_str)
 
-        sprintf(s, arguments=[dst_addr, format_addr, arg])
-
         for i in range(9):
             j = random.randint(10**i, 10 ** (i + 1))
             s2 = s.copy()
+            sprintf(s2, arguments=[dst_addr, format_addr, arg])
             s2.add_constraints(arg == j)
-            # print s2.solver.eval_upto(s2.memory.load(dst_addr, i+2), 2, cast_to=bytes), repr(b"%d\x00" % j)
+            # print(s2.solver.eval_upto(s2.memory.load(dst_addr, i+2), 2, cast_to=bytes), repr(b"%d\x00" % j))
             assert s2.solver.eval_upto(s2.memory.load(dst_addr, i + 2), 2, cast_to=bytes) == [b"%d\x00" % j]
 
         s2 = s.copy()
+        sprintf(s2, arguments=[dst_addr, format_addr, arg])
         s2.add_constraints(arg == 0)
-        # print s2.solver.eval_upto(s2.memory.load(dst_addr, 2), 2, cast_to=bytes), repr(b"%d\x00" % 0)
+        # print(s2.solver.eval_upto(s2.memory.load(dst_addr, 2), 2, cast_to=bytes), repr(b"%d\x00" % 0))
         assert s2.solver.eval_upto(s2.memory.load(dst_addr, 2), 2, cast_to=bytes) == [b"%d\x00" % 0]
 
     def test_memset(self):
